@@ -1,5 +1,5 @@
 /*
-  NAME: transfer_stock_to_warehouse
+	NAME: transfer_stock_to_warehouse
 
 	PARAMS:
 		p_quantity: INT
@@ -18,14 +18,14 @@ DECLARE
     realized_store_stock INT;
 BEGIN
     /*
-      Check if the item really exist at warehouse,
-      If never even exist, this will cause serious error
+		Check if the item really exist at warehouse,
+		If never even exist, this will cause serious error
     */
     SELECT EXISTS (
         SELECT 1 FROM warehouse WHERE item_id = p_item_id AND tenant_id = p_tenant_id
     ) INTO exists_flag;
     IF NOT exists_flag THEN
-      RETURN '[ERROR] Fatal error, current item from store never exist at warehouse';
+		RETURN '[ERROR] Fatal error, current item from store never exist at warehouse';
     END IF;
 
     -- Validate if item exist or not
