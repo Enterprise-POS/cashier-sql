@@ -4,7 +4,6 @@
 	PARAMS:
 		p_quantity: INT (minus value (-1) is allowed here)
 		p_item_name: TEXT
-		p_category: TEXT | NULL
 
 		p_item_id: INT
 		p_tenant_id: INT
@@ -18,7 +17,7 @@ DECLARE
 BEGIN
 	-- BE TODO:
 	-- 1. IF p_quantity == 0 THEN make response immediately rather tell SQL
-	-- 2. Check and validate the p_item_name, p_category
+	-- 2. Check and validate the p_item_name
 
     /*
 		Check if the item really exist at warehouse,
@@ -44,7 +43,6 @@ BEGIN
         UPDATE warehouse
         SET stocks = realized_warehouse_stock,
             item_name = p_item_name,
-            category = p_category
         WHERE item_id = p_item_id AND tenant_id = p_tenant_id;
 
         RETURN '[SUCCESS] Edit success';

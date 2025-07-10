@@ -1,0 +1,2 @@
+ALTER TABLE category_mtm_warehouse
+ADD CONSTRAINT unique_category_mtm_warehouse_category_id_and_item_id UNIQUE (category_id, item_id);
