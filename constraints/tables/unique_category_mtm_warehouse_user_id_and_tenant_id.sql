@@ -1,0 +1,2 @@
+ALTER TABLE user_mtm_tenant
+ADD CONSTRAINT unique_category_mtm_warehouse_user_id_and_tenant_id UNIQUE (user_id, tenant_id);
