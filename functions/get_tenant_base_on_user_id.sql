@@ -8,6 +8,7 @@
 		type Tenant struct {
 			Id          int        `json:"id,omitempty"`
 			Name        string     `json:"name"`
+			IsActive	boolean	   `json:"is_active"`
 			OwnerUserId int        `json:"owner_user_id"`
 			CreatedAt   *time.Time `json:"created_at,omitempty"`
 		}
@@ -18,6 +19,7 @@ RETURNS TABLE (
 	id BIGINT, -- int8 / tenant_id
 	name TEXT,
 	
+	is_active BOOLEAN,
 	owner_user_id BIGINT, -- int8 / tenant.owner_user_id
 	created_at TIMESTAMP WITH TIME ZONE
 )
@@ -28,6 +30,7 @@ BEGIN
 		tenant.id AS id, 
 		tenant.name AS name, 
 		
+		tenant.is_active,
 		tenant.owner_user_id,
 		tenant.created_at 
 	FROM user_mtm_tenant 
