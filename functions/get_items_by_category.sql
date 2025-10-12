@@ -2,7 +2,7 @@
 	warehouse -INNER JOIN-> category_mtm_warehouse -INNER JOIN-> category
 
 	Example use:
-		SELECT * FROM get_category_with_items(1, 10, 0);
+		SELECT * FROM get_items_by_category(1, 2, 10, 0);
 
 	2025/09/16
 		type CategoryWithItem struct {
@@ -16,7 +16,7 @@
 		}
 */
 
-CREATE OR REPLACE FUNCTION get_category_with_items (p_tenant_id INT, p_limit INT, p_offset INT) 
+CREATE OR REPLACE FUNCTION get_items_by_category (p_tenant_id INT, p_category_id INT, p_limit INT, p_offset INT) 
 RETURNS TABLE (
 	category_id BIGINT, -- int8
 	category_name TEXT,
@@ -31,18 +31,18 @@ AS $$
 BEGIN
 	RETURN QUERY
 	SELECT 
-        category.id AS category_id,
-        category.category_name,
-        warehouse.item_id,
-        warehouse.item_name,
-        warehouse.stocks,
+		category.id AS category_id, 
+		category.category_name,
+		warehouse.item_id, 
+		warehouse.item_name, 
+		warehouse.stocks,
         COUNT(*) OVER() AS total_count
-    FROM warehouse
-    INNER JOIN category_mtm_warehouse 
-        ON category_mtm_warehouse.item_id = warehouse.item_id
-    INNER JOIN category 
-        ON category.id = category_mtm_warehouse.category_id
-    WHERE warehouse.tenant_id = p_tenant_id
-    LIMIT p_limit OFFSET p_offset;
+	FROM warehouse
+	INNER JOIN category_mtm_warehouse 
+		ON category_mtm_warehouse.item_id = warehouse.item_id
+	INNER JOIN category 
+		ON category.id = category_mtm_warehouse.category_id
+	WHERE warehouse.tenant_id = p_tenant_id AND category.id = p_category_id
+	LIMIT p_limit OFFSET p_offset;
 END;
 $$ LANGUAGE plpgsql;

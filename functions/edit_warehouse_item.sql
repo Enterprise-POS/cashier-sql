@@ -4,6 +4,7 @@
 	PARAMS:
 		p_quantity: INT (minus value (-1) is allowed here)
 		p_item_name: TEXT
+		p_category: INT
 
 		p_item_id: INT
 		p_tenant_id: INT
@@ -44,8 +45,6 @@ BEGIN
         SET stocks = realized_warehouse_stock,
             item_name = p_item_name,
         WHERE item_id = p_item_id AND tenant_id = p_tenant_id;
-
-        RETURN '[SUCCESS] Edit success';
     ELSE
         RETURN '[ERROR] Invalid quantities';
     END IF;
