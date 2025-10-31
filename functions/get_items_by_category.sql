@@ -4,15 +4,17 @@
 	Example use:
 		SELECT * FROM get_items_by_category(1, 2, 10, 0);
 
-	2025/09/16
+	2025/10/30
 		type CategoryWithItem struct {
-			Id           int    `json:"id,omitempty"`
+			CategoryId int `json:"category_id"`
+
 			CategoryName string `json:"category_name"`
 
-			ItemId   int    `json:"item_id,omitempty"`
+			ItemId   int    `json:"item_id"`
 			ItemName string `json:"item_name"`
 			Stocks   int    `json:"stocks"`
-			TotalCount int 	`json:"total_count"`
+
+			TotalCount int `json:"total_count"`
 		}
 */
 

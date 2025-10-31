@@ -17,9 +17,15 @@ DECLARE
     realized_warehouse_stock INT;
     realized_store_stock INT;
 BEGIN
-    -- Validate if item exist or not
+    -- Validate if item exist or not and user send to valid store
     SELECT EXISTS (
-        SELECT 1 FROM warehouse WHERE item_id = p_item_id AND tenant_id = p_tenant_id
+        SELECT 1 FROM warehouse 
+			JOIN store
+			ON store.tenant_id = warehouse.tenant_id
+		WHERE 
+            warehouse.item_id = p_item_id 
+            AND warehouse.tenant_id = p_tenant_id 
+            AND store.id = p_store_id
     ) INTO exists_flag;
 
     IF NOT exists_flag THEN
