@@ -9,12 +9,13 @@
 		param 5: name query for like query
 		SELECT * FROM get_store_stocks(1, 2, 10, 0, "some name");
 
-	2025/10/30
+	2025/12/12
 		type StoreStockV2 struct {
 			Id         int        `json:"id,omitempty"`
 			ItemName   string     `json:"item_name"`
 			Stocks     int        `json:"stocks"` // StoreStock Stock
 			Price      int        `json:"price"`
+			StockType  StockType  `json:"stock_type"`
 			CreatedAt  *time.Time `json:"created_at,omitempty"` // Warehouse Item created_at
 			ItemId     int        `json:"item_id"`
 			TotalCount int        `json:"total_count"`
@@ -28,6 +29,7 @@ RETURNS TABLE (
 	item_name TEXT,
 	price BIGINT, -- int8
 	stocks BIGINT, -- int8
+	stock_type TEXT, -- ENUM
 	created_at TIMESTAMPTZ, -- store_stock item created_at
 
 	total_count BIGINT -- int8
@@ -51,6 +53,7 @@ BEGIN
     warehouse.item_name,
     store_stock.price,
     store_stock.stocks,
+	warehouse.stock_type::TEXT,
     store_stock.created_at,
     COUNT(*) OVER() AS total_count
 	FROM store_stock 
