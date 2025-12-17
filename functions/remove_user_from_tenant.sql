@@ -42,7 +42,7 @@ BEGIN
         -- Otherwise remove the user from the tenant membership
         DELETE FROM user_mtm_tenant 
         WHERE user_id = p_user_id 
-          AND tenant_id = p_tenant_id;
+        AND tenant_id = p_tenant_id;
 
         RETURN '[SUCCESS] Removed from tenant';
     END IF;
