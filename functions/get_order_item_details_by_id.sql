@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION get_order_item_details_by_id(p_order_item_id INT, p_tenant_id INT, p_limit INT, p_offset INT)
+CREATE OR REPLACE FUNCTION get_order_item_details_by_id(p_order_item_id INT, p_tenant_id INT)
 RETURNS TABLE (
 	id BIGINT,
 	item_id BIGINT,
@@ -33,7 +33,6 @@ BEGIN
 	order_item.created_at AS order_item_created_at
 	FROM order_item
 	INNER JOIN purchased_item_list ON purchased_item_list.order_item_id = order_item.id
-	WHERE order_item.tenant_id = p_tenant_id AND order_item.id = p_order_item_id
-	LIMIT p_limit OFFSET p_offset;
+	WHERE order_item.tenant_id = p_tenant_id AND order_item.id = p_order_item_id;
 END;
 $$ LANGUAGE plpgsql;
