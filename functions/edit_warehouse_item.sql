@@ -4,6 +4,7 @@
 	PARAMS:
 		p_quantity: INT (minus value (-1) is allowed here)
 		p_item_name: TEXT
+		p_stock_type: TEXT
 		p_category: INT
 
 		p_item_id: INT
@@ -31,6 +32,14 @@ BEGIN
 		RETURN '[ERROR] Fatal error, current item from store never exist at warehouse';
     END IF;
 
+	-- Validate stock_type ENUM value
+	IF p_stock_type NOT IN ('TRACKED', 'UNLIMITED') THEN
+		RETURN format(
+			'[ERROR] Invalid stock_type value. Must be TRACKED or UNLIMITED, got: %s',
+			p_stock_type
+		);
+	END IF;
+
 	-- Get current stock
 	SELECT stocks INTO current_warehouse_stock
 	FROM warehouse 
@@ -44,6 +53,7 @@ BEGIN
         UPDATE warehouse
         SET stocks = realized_warehouse_stock,
             item_name = p_item_name,
+			stock_type = p_stock_type::stock_type
         WHERE item_id = p_item_id AND tenant_id = p_tenant_id;
     ELSE
         RETURN '[ERROR] Invalid quantities';
