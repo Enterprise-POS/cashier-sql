@@ -1,22 +1,6 @@
-/*
-	warehouse -LEFT JOIN-> category_mtm_warehouse -LEFT JOIN-> category
-
-	Example use:
-		SELECT * FROM find_item_by_id(333, 1417);
-
-	2025/09/16
-		type CategoryWithItem struct {
-			Id           int    `json:"id,omitempty"`
-			CategoryName string `json:"category_name"`
-
-			ItemId   int    `json:"item_id,omitempty"`
-			ItemName string `json:"item_name"`
-			Stocks   int    `json:"stocks"`
-			TotalCount int 	`json:"total_count" // Will not be use for this sql query`
-		}
-*/
-
-CREATE OR REPLACE FUNCTION find_item_by_id(
+-- There is a same function purpose but different name. Need to examine more for detail
+-- In back end, CategoryWithItem is expect to have total_count but in this function we don't use
+CREATE OR REPLACE FUNCTION find_complete_by_id(
     p_tenant_id INT,
     p_item_id INT
 ) 
@@ -25,6 +9,7 @@ RETURNS TABLE (
     category_name TEXT,
     item_id BIGINT,
     item_name TEXT,
+    stock_type TEXT,
     stocks BIGINT
 )
 AS $$
@@ -34,8 +19,8 @@ BEGIN
     -- Count how many matches
     SELECT COUNT(*) INTO v_count
     FROM warehouse
-    WHERE tenant_id = p_tenant_id 
-      AND item_id = p_item_id;
+    WHERE warehouse.tenant_id = p_tenant_id 
+      AND warehouse.item_id = p_item_id;
 
     -- Handle error cases
     IF v_count = 0 THEN
@@ -53,6 +38,7 @@ BEGIN
         category.category_name,
         warehouse.item_id,
         warehouse.item_name,
+        warehouse.stock_type::TEXT,
         warehouse.stocks
     FROM warehouse
     LEFT JOIN category_mtm_warehouse 
