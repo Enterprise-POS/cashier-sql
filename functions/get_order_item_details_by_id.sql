@@ -24,6 +24,12 @@ BEGIN
 	purchased_item_list.quantity,
 	purchased_item_list.discount_amount,
 	purchased_item_list.total_amount,
+	/*
+	We don't request the order_item_id because
+	we already know if the data return it's guaranteed
+	that the order_item_id is from parameter is correct
+	-- purchased_item_list_.order_item_id 
+	*/
 
 	order_item.id AS order_item_id,
 	order_item.purchased_price AS order_item_purchased_price,
@@ -31,6 +37,7 @@ BEGIN
 	order_item.total_quantity AS order_item_total_quantity,
 	order_item.total_amount AS order_item_total_amount,
 	order_item.created_at AS order_item_created_at
+
 	FROM order_item
 	INNER JOIN purchased_item_list ON purchased_item_list.order_item_id = order_item.id
 	WHERE order_item.tenant_id = p_tenant_id AND order_item.id = p_order_item_id;
