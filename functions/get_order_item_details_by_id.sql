@@ -13,7 +13,8 @@ RETURNS TABLE (
 	order_item_subtotal BIGINT,
 	order_item_total_quantity BIGINT,
 	order_item_total_amount BIGINT,
-	order_item_created_at TIMESTAMPTZ
+	order_item_created_at TIMESTAMPTZ,
+	order_item_store_id BIGINT
 )
 AS $$ 
 BEGIN
@@ -39,6 +40,7 @@ BEGIN
 	order_item.total_quantity AS order_item_total_quantity,
 	order_item.total_amount AS order_item_total_amount,
 	order_item.created_at AS order_item_created_at
+	order_item.store_id AS order_item_store_id
 
 	FROM order_item
 	INNER JOIN purchased_item_list ON purchased_item_list.order_item_id = order_item.id
