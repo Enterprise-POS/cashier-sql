@@ -13,7 +13,8 @@
 					"quantity": 2,
 					"purchased_price": 10000,
 					"total_amount": 20000,
-					"discount_amount": 0
+					"discount_amount": 0,
+					"item_name_snapshot": "Some Item Name at that transaction time"
 				}
 			]'::JSONB,
 
@@ -52,6 +53,7 @@ DECLARE
 	v_quantity INT;
 	v_current_stock INT;
 	v_stock_type VARCHAR(50);
+	v_db_item_name TEXT;
 BEGIN
 	-- Future suggestion: 
 	-- 		Maybe this may affect the performance, as long as no performance issue
@@ -89,8 +91,8 @@ BEGIN
 		END IF;
 		
 		-- Fetch actual price and stock_type from database
-		SELECT "store_stock".price, "store_stock".stocks, "warehouse".stock_type
-		INTO v_db_price, v_current_stock, v_stock_type
+		SELECT "store_stock".price, "store_stock".stocks, "warehouse".stock_type, "warehouse".item_name
+		INTO v_db_price, v_current_stock, v_stock_type, v_db_item_name
 		FROM store_stock
 		INNER JOIN warehouse ON "warehouse".tenant_id = "store_stock".tenant_id AND "warehouse".item_id = "store_stock".item_id
 		WHERE "store_stock".item_id = v_item_id
@@ -113,8 +115,8 @@ BEGIN
 		-- Check stock availability
 		IF v_stock_type = 'TRACKED' THEN 
 			IF v_current_stock < v_quantity THEN
-				RAISE EXCEPTION 'Insufficient stock for item %. Available: %, Requested: %',
-					v_item_id, v_current_stock, v_quantity;
+				RAISE EXCEPTION 'Insufficient stock for item % (%). Available: %, Requested: %',
+					v_db_item_name, v_item_id, v_current_stock, v_quantity;
 			END IF;
 		END IF;
 	END LOOP;
@@ -147,6 +149,7 @@ BEGIN
 		quantity,
 		purchased_price,
 		total_amount,
+		item_name_snapshot,
 		discount_amount
 	)
 	SELECT 
@@ -155,6 +158,7 @@ BEGIN
 		(item->>'quantity')::INT,
 		(item->>'purchased_price')::INT,
 		(item->>'total_amount')::INT,
+		(item->>'item_name_snapshot')::TEXT,
 		0 -- (item->>'discount_amount')::INT TODO: Implement discount voucher
 	FROM jsonb_array_elements(p_items) AS item;
 

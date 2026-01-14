@@ -6,6 +6,7 @@ RETURNS TABLE (
 	quantity BIGINT,
 	discount_amount BIGINT,
 	total_amount BIGINT,
+	item_name_snapshot TEXT,
 	
 	order_item_id BIGINT,
 	order_item_purchased_price BIGINT,
@@ -24,6 +25,7 @@ BEGIN
 	purchased_item_list.quantity,
 	purchased_item_list.discount_amount,
 	purchased_item_list.total_amount,
+	purchased_item_list.item_name_snapshot,
 	/*
 	We don't request the order_item_id because
 	we already know if the data return it's guaranteed
