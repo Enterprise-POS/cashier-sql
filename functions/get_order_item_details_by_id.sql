@@ -2,7 +2,7 @@ CREATE OR REPLACE FUNCTION get_order_item_details_by_id(p_order_item_id INT, p_t
 RETURNS TABLE (
 	id BIGINT,
 	item_id BIGINT,
-	purchased_price BIGINT,
+	store_price_snapshot BIGINT, -- Changed from purchased_price
 	quantity BIGINT,
 	discount_amount BIGINT,
 	total_amount BIGINT,
@@ -22,7 +22,7 @@ BEGIN
 	SELECT 
 	purchased_item_list.id,
 	purchased_item_list.item_id, 
-	purchased_item_list.purchased_price,
+	purchased_item_list.store_price_snapshot,
 	purchased_item_list.quantity,
 	purchased_item_list.discount_amount,
 	purchased_item_list.total_amount,
@@ -39,7 +39,7 @@ BEGIN
 	order_item.subtotal AS order_item_subtotal,
 	order_item.total_quantity AS order_item_total_quantity,
 	order_item.total_amount AS order_item_total_amount,
-	order_item.created_at AS order_item_created_at
+	order_item.created_at AS order_item_created_at,
 	order_item.store_id AS order_item_store_id
 
 	FROM order_item

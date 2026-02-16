@@ -11,7 +11,7 @@
 					"id": 1,
 					"item_id": 1,
 					"quantity": 2,
-					"purchased_price": 10000,
+					"store_price_snapshot": 10000,
 					"total_amount": 20000,
 					"discount_amount": 0,
 					"item_name_snapshot": "Some Item Name at that transaction time"
@@ -83,7 +83,7 @@ BEGIN
 	FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
 	LOOP
 		v_item_id := (v_item->>'item_id')::INT;
-		v_provided_price := (v_item->>'purchased_price')::INT;
+		v_provided_price := (v_item->>'store_price_snapshot')::INT;
 		v_quantity := (v_item->>'quantity')::INT;
 
 		IF v_quantity <= 0 THEN
@@ -147,7 +147,7 @@ BEGIN
 		order_item_id,
 		item_id,
 		quantity,
-		purchased_price,
+		store_price_snapshot,
 		total_amount,
 		item_name_snapshot,
 		discount_amount
@@ -156,7 +156,7 @@ BEGIN
 		v_order_item_id,
 		(item->>'item_id')::INT,
 		(item->>'quantity')::INT,
-		(item->>'purchased_price')::INT,
+		(item->>'store_price_snapshot')::INT,
 		(item->>'total_amount')::INT,
 		(item->>'item_name_snapshot')::TEXT,
 		0 -- (item->>'discount_amount')::INT TODO: Implement discount voucher
