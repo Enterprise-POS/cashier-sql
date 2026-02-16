@@ -3,11 +3,12 @@ RETURNS TABLE (
 	id BIGINT,
 	item_id BIGINT,
 	store_price_snapshot BIGINT, -- Changed from purchased_price
+	base_price_snapshot BIGINT,
 	quantity BIGINT,
 	discount_amount BIGINT,
 	total_amount BIGINT,
 	item_name_snapshot TEXT,
-	
+
 	order_item_id BIGINT,
 	order_item_purchased_price BIGINT,
 	order_item_subtotal BIGINT,
@@ -19,10 +20,11 @@ RETURNS TABLE (
 AS $$ 
 BEGIN
 	RETURN QUERY
-	SELECT 
+	SELECT
 	purchased_item_list.id,
-	purchased_item_list.item_id, 
+	purchased_item_list.item_id,
 	purchased_item_list.store_price_snapshot,
+	purchased_item_list.base_price_snapshot,
 	purchased_item_list.quantity,
 	purchased_item_list.discount_amount,
 	purchased_item_list.total_amount,
@@ -31,7 +33,7 @@ BEGIN
 	We don't request the order_item_id because
 	we already know if the data return it's guaranteed
 	that the order_item_id is from parameter is correct
-	-- purchased_item_list_.order_item_id 
+	-- purchased_item_list_.order_item_id
 	*/
 
 	order_item.id AS order_item_id,

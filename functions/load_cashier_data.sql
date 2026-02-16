@@ -13,6 +13,7 @@
 			ItemName  string    `json:"item_name"`
 			Stocks    int       `json:"stocks"`
 			StockType StockType `json:"stock_type"`
+			BasePrice int       `json:"base_price"`
 			IsActive  bool      `json:"is_active"`
 
 			StoreStockId     int `json:"store_stock_id"`
@@ -21,15 +22,16 @@
 		}
 */
 
-CREATE OR REPLACE FUNCTION load_cashier_data(p_tenant_id INT, p_store_id INT) 
+CREATE OR REPLACE FUNCTION load_cashier_data(p_tenant_id INT, p_store_id INT)
 RETURNS TABLE (
 	category_id BIGINT, -- int8
 	category_name TEXT,
-	
+
 	item_id BIGINT, -- int8
 	item_name TEXT,
 	stocks BIGINT,
 	stock_type TEXT,
+	base_price BIGINT,
 	is_active BOOLEAN,
 
 	store_stock_id BIGINT,
@@ -39,26 +41,27 @@ RETURNS TABLE (
 AS $$ 
 BEGIN
 	RETURN QUERY
-	SELECT 
+	SELECT
 		category.id AS category_id,
 		category.category_name,
-		
+
 		warehouse.item_id,
 		warehouse.item_name,
 		warehouse.stocks,
 		warehouse.stock_type::TEXT,
+		warehouse.base_price,
 		warehouse.is_active,
 
 		store_stock.id AS store_stock_id,
 		store_stock.stocks AS store_stock_stocks,
 		store_stock.price AS store_stock_price
 	FROM warehouse
-	INNER JOIN store_stock 
-		ON store_stock.item_id = warehouse.item_id 
+	INNER JOIN store_stock
+		ON store_stock.item_id = warehouse.item_id
 		AND store_stock.store_id = p_store_id
-	LEFT JOIN category_mtm_warehouse 
+	LEFT JOIN category_mtm_warehouse
 		ON category_mtm_warehouse.item_id = warehouse.item_id
-	LEFT JOIN category 
+	LEFT JOIN category
 		ON category.id = category_mtm_warehouse.category_id
 	WHERE warehouse.tenant_id = p_tenant_id;
 END;

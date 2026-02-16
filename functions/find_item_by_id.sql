@@ -9,9 +9,10 @@
 			Id           int    `json:"id,omitempty"`
 			CategoryName string `json:"category_name"`
 
-			ItemId   int    `json:"item_id,omitempty"`
-			ItemName string `json:"item_name"`
-			Stocks   int    `json:"stocks"`
+			ItemId    int    `json:"item_id,omitempty"`
+			ItemName  string `json:"item_name"`
+			Stocks    int    `json:"stocks"`
+			BasePrice int    `json:"base_price"`
 			TotalCount int 	`json:"total_count" // Will not be use for this sql query`
 		}
 */
@@ -19,13 +20,14 @@
 CREATE OR REPLACE FUNCTION find_item_by_id(
     p_tenant_id INT,
     p_item_id INT
-) 
+)
 RETURNS TABLE (
     category_id BIGINT,
     category_name TEXT,
     item_id BIGINT,
     item_name TEXT,
-    stocks BIGINT
+    stocks BIGINT,
+    base_price BIGINT
 )
 AS $$
 DECLARE
@@ -48,18 +50,19 @@ BEGIN
 
     -- If exactly 1 row, return the data
     RETURN QUERY
-    SELECT 
+    SELECT
         category.id AS category_id,
         category.category_name,
         warehouse.item_id,
         warehouse.item_name,
-        warehouse.stocks
+        warehouse.stocks,
+        warehouse.base_price
     FROM warehouse
-    LEFT JOIN category_mtm_warehouse 
+    LEFT JOIN category_mtm_warehouse
         ON category_mtm_warehouse.item_id = warehouse.item_id
-    LEFT JOIN category 
+    LEFT JOIN category
         ON category.id = category_mtm_warehouse.category_id
-    WHERE warehouse.tenant_id = p_tenant_id 
+    WHERE warehouse.tenant_id = p_tenant_id
       AND warehouse.item_id = p_item_id;
 END;
 $$ LANGUAGE plpgsql;

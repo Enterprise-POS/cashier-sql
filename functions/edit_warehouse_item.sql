@@ -5,12 +5,22 @@
 		p_quantity: INT (minus value (-1) is allowed here)
 		p_item_name: TEXT
 		p_stock_type: TEXT
-		p_category: INT
+		p_base_price: INT
 
 		p_item_id: INT
 		p_tenant_id: INT
 */
 
+CREATE OR REPLACE FUNCTION edit_warehouse_item(
+	p_quantity INT,
+	p_item_name TEXT,
+	p_stock_type TEXT,
+	p_base_price INT,
+	p_item_id INT,
+	p_tenant_id INT
+)
+RETURNS TEXT
+AS $$
 DECLARE
     exists_flag BOOLEAN; -- will be used repeatedly
 
@@ -53,9 +63,13 @@ BEGIN
         UPDATE warehouse
         SET stocks = realized_warehouse_stock,
             item_name = p_item_name,
-			stock_type = p_stock_type::stock_type
+			stock_type = p_stock_type::stock_type,
+			base_price = p_base_price
         WHERE item_id = p_item_id AND tenant_id = p_tenant_id;
     ELSE
         RETURN '[ERROR] Invalid quantities';
     END IF;
+
+	RETURN 'SUCCESS';
 END;
+$$ LANGUAGE plpgsql;

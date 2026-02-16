@@ -12,6 +12,7 @@
 					"item_id": 1,
 					"quantity": 2,
 					"store_price_snapshot": 10000,
+					"base_price_snapshot": 8000,
 					"total_amount": 20000,
 					"discount_amount": 0,
 					"item_name_snapshot": "Some Item Name at that transaction time"
@@ -48,6 +49,7 @@ DECLARE
 	v_order_item_id INT;
 	v_item JSONB;
 	v_db_price INT;
+	v_db_base_price INT;
 	v_provided_price INT;
 	v_item_id INT;
 	v_quantity INT;
@@ -91,8 +93,8 @@ BEGIN
 		END IF;
 		
 		-- Fetch actual price and stock_type from database
-		SELECT "store_stock".price, "store_stock".stocks, "warehouse".stock_type, "warehouse".item_name
-		INTO v_db_price, v_current_stock, v_stock_type, v_db_item_name
+		SELECT "store_stock".price, "store_stock".stocks, "warehouse".stock_type, "warehouse".item_name, "warehouse".base_price
+		INTO v_db_price, v_current_stock, v_stock_type, v_db_item_name, v_db_base_price
 		FROM store_stock
 		INNER JOIN warehouse ON "warehouse".tenant_id = "store_stock".tenant_id AND "warehouse".item_id = "store_stock".item_id
 		WHERE "store_stock".item_id = v_item_id
@@ -148,15 +150,17 @@ BEGIN
 		item_id,
 		quantity,
 		store_price_snapshot,
+		base_price_snapshot,
 		total_amount,
 		item_name_snapshot,
 		discount_amount
 	)
-	SELECT 
+	SELECT
 		v_order_item_id,
 		(item->>'item_id')::INT,
 		(item->>'quantity')::INT,
 		(item->>'store_price_snapshot')::INT,
+		(item->>'base_price_snapshot')::INT,
 		(item->>'total_amount')::INT,
 		(item->>'item_name_snapshot')::TEXT,
 		0 -- (item->>'discount_amount')::INT TODO: Implement discount voucher

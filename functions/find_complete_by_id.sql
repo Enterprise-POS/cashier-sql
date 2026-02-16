@@ -10,7 +10,8 @@ RETURNS TABLE (
     item_id BIGINT,
     item_name TEXT,
     stock_type TEXT,
-    stocks BIGINT
+    stocks BIGINT,
+    base_price BIGINT
 )
 AS $$
 DECLARE
@@ -33,19 +34,20 @@ BEGIN
 
     -- If exactly 1 row, return the data
     RETURN QUERY
-    SELECT 
+    SELECT
         category.id AS category_id,
         category.category_name,
         warehouse.item_id,
         warehouse.item_name,
         warehouse.stock_type::TEXT,
-        warehouse.stocks
+        warehouse.stocks,
+        warehouse.base_price
     FROM warehouse
-    LEFT JOIN category_mtm_warehouse 
+    LEFT JOIN category_mtm_warehouse
         ON category_mtm_warehouse.item_id = warehouse.item_id
-    LEFT JOIN category 
+    LEFT JOIN category
         ON category.id = category_mtm_warehouse.category_id
-    WHERE warehouse.tenant_id = p_tenant_id 
+    WHERE warehouse.tenant_id = p_tenant_id
       AND warehouse.item_id = p_item_id;
 END;
 $$ LANGUAGE plpgsql;
