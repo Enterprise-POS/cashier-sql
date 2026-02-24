@@ -19,18 +19,31 @@
 			CreatedAt  *time.Time `json:"created_at,omitempty"` // Warehouse Item created_at
 			ItemId     int        `json:"item_id"`
 			TotalCount int        `json:"total_count"`
+			BasePrice int       `json:"base_price"`
+			IsActive  bool      `json:"is_active"`
+			CategoryId   int    `json:"category_id"`
+			CategoryName string `json:"category_name"`
 		}
 */
 
 CREATE OR REPLACE FUNCTION get_store_stocks(p_tenant_id INT, p_store_id INT, p_limit INT, p_offset INT, p_name_query TEXT)
 RETURNS TABLE (
+	-- store_stock property
 	id BIGINT, -- int8
-	item_id BIGINT, -- int8
-	item_name TEXT,
 	price BIGINT, -- int8
 	stocks BIGINT, -- int8
-	stock_type TEXT, -- ENUM
 	created_at TIMESTAMPTZ, -- store_stock item created_at
+	
+	-- warehouse
+	item_id BIGINT, -- int8
+	item_name TEXT,
+	stock_type TEXT, -- ENUM
+	base_price BIGINT,
+	is_active BOOLEAN,
+
+	-- category
+	category_id BIGINT, -- int8
+	category_name TEXT,
 
 	total_count BIGINT -- int8
 )
@@ -49,19 +62,28 @@ BEGIN
 	RETURN QUERY
 	SELECT 
     store_stock.id,
-    warehouse.item_id,
-    warehouse.item_name,
     store_stock.price,
     store_stock.stocks,
-	warehouse.stock_type::TEXT,
     store_stock.created_at,
-    COUNT(*) OVER() AS total_count
+    warehouse.item_id,
+    warehouse.item_name,
+	warehouse.stock_type::TEXT,
+	warehouse.base_price,
+	warehouse.is_active,
+	category.id AS category_id,
+	category.category_name,
+
+    COUNT(store_stock.id) OVER() AS total_count
 	FROM store_stock 
 	INNER JOIN warehouse 
 		ON warehouse.item_id=store_stock.item_id
+	LEFT JOIN category_mtm_warehouse
+		ON category_mtm_warehouse.item_id = warehouse.item_id
+	LEFT JOIN category
+		ON category.id = category_mtm_warehouse.category_id
 	WHERE 
 		store_stock.tenant_id = p_tenant_id 
-		AND store_stock.store_id=p_store_id
+		AND store_stock.store_id = p_store_id
 		AND (
 			p_name_query IS NULL
 			OR p_name_query = ''
