@@ -51,6 +51,7 @@ DECLARE
 	v_db_price INT;
 	v_db_base_price INT;
 	v_provided_price INT;
+	v_provided_base_price INT;
 	v_item_id INT;
 	v_quantity INT;
 	v_current_stock INT;
@@ -86,6 +87,7 @@ BEGIN
 	LOOP
 		v_item_id := (v_item->>'item_id')::INT;
 		v_provided_price := (v_item->>'store_price_snapshot')::INT;
+		v_provided_base_price := (v_item->>'base_price_snapshot')::INT;
 		v_quantity := (v_item->>'quantity')::INT;
 
 		IF v_quantity <= 0 THEN
@@ -112,6 +114,12 @@ BEGIN
 		IF v_db_price != v_provided_price THEN
 			RAISE EXCEPTION 'Security violation: Price mismatch for item %. Expected %, got %', 
 				v_item_id, v_db_price, v_provided_price;
+		END IF;
+
+		-- Check if warehouse.base_price matches
+		IF v_db_base_price != v_provided_base_price THEN
+			RAISE EXCEPTION 'Security violation: Price mismatch for item %. Expected %, got %', 
+				v_item_id, v_db_base_price, v_provided_base_price;
 		END IF;
 
 		-- Check stock availability
