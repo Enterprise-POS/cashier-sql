@@ -1,52 +1,22 @@
-/*
-	Example usage:
-		SELECT transactions(
-			20000,
-			2,
-			20000,
-			0,
-			20000,
-			'[
-				{
-					"id": 1,
-					"item_id": 1,
-					"quantity": 2,
-					"store_price_snapshot": 10000,
-					"base_price_snapshot": 8000,
-					"total_amount": 20000,
-					"discount_amount": 0,
-					"item_name_snapshot": "Some Item Name at that transaction time"
-				}
-			]'::JSONB,
-
-			1,
-			1,
-			1
-		);
-
-		order_item_id will be generate by the syntax,
-		you don't need ::JSONB if using supabase Rpc for Go
-*/
-
-CREATE OR REPLACE FUNCTION transactions (
-	p_purchased_price INT, 
-    p_total_quantity INT, 
-    p_total_amount INT, 
-    p_discount_amount INT, 
-    p_subtotal INT,
-
-	p_items JSONB,
-	
-	-- Validation
-	p_user_id INT,
-	p_tenant_id INT, 
-    p_store_id INT
-) 
-RETURNS INT
-AS $$
+CREATE OR REPLACE FUNCTION public.transactions(
+  p_purchased_price integer,
+  p_total_quantity integer,
+  p_total_amount integer,
+  p_discount_amount integer,
+  p_subtotal integer,
+  p_items jsonb,
+  p_user_id integer,
+  p_tenant_id integer,
+  p_store_id integer,
+  p_payment_type text DEFAULT 'CASH'
+)
+RETURNS TABLE(v_id integer, v_created_at timestamp with time zone, v_total_amount integer, v_purchased_price integer)
+ LANGUAGE plpgsql
+AS $function$
 DECLARE
 	exists_flag BOOLEAN;
 	v_order_item_id INT;
+	v_order_item_created_at TIMESTAMPTZ;
 	v_item JSONB;
 	v_db_price INT;
 	v_db_base_price INT;
@@ -58,17 +28,10 @@ DECLARE
 	v_stock_type VARCHAR(50);
 	v_db_item_name TEXT;
 BEGIN
-	-- Future suggestion: 
-	-- 		Maybe this may affect the performance, as long as no performance issue
-	-- 		then this code may remain. Suggestion is use INDEX for user id, tenant id, store id
-	-- Check if user really exist
-	-- Validate user exists (single query)
 	IF NOT EXISTS (SELECT 1 FROM "user" WHERE id = p_user_id) THEN
 		RAISE EXCEPTION 'Fatal error: user id % does not exist', p_user_id;
     END IF;
 
-	-- Check
-	-- Validate store exists (single query)
 	IF NOT EXISTS (
 		SELECT 1 FROM store_stock 
 		WHERE tenant_id = p_tenant_id AND store_id = p_store_id
@@ -77,7 +40,6 @@ BEGIN
         RAISE EXCEPTION 'Fatal error: no stock found for tenant_id % and store_id %', p_tenant_id, p_store_id;
     END IF;
 
-	-- Before the bulk insert, add:
 	IF p_items IS NULL OR jsonb_array_length(p_items) = 0 THEN
 		RAISE EXCEPTION 'Fatal error: items array is empty';
 	END IF;
@@ -93,8 +55,7 @@ BEGIN
 		IF v_quantity <= 0 THEN
 			RAISE EXCEPTION 'Invalid quantity % for item %', v_quantity, v_item_id;
 		END IF;
-		
-		-- Fetch actual price and stock_type from database
+
 		SELECT "store_stock".price, "store_stock".stocks, "warehouse".stock_type, "warehouse".item_name, "warehouse".base_price
 		INTO v_db_price, v_current_stock, v_stock_type, v_db_item_name, v_db_base_price
 		FROM store_stock
@@ -104,25 +65,21 @@ BEGIN
 			AND "store_stock".store_id = p_store_id
 		FOR UPDATE OF store_stock;
 
-		-- Check if item exists
 		IF v_db_price IS NULL THEN
 			RAISE EXCEPTION 'Security violation: Item % not found in store % for tenant %', 
 				v_item_id, p_store_id, p_tenant_id;
 		END IF;
-		
-		-- Check if price matches
+
 		IF v_db_price != v_provided_price THEN
 			RAISE EXCEPTION 'Security violation: Price mismatch for item %. Expected %, got %', 
 				v_item_id, v_db_price, v_provided_price;
 		END IF;
 
-		-- Check if warehouse.base_price matches
 		IF v_db_base_price != v_provided_base_price THEN
 			RAISE EXCEPTION 'Security violation: Price mismatch for item %. Expected %, got %', 
 				v_item_id, v_db_base_price, v_provided_base_price;
 		END IF;
 
-		-- Check stock availability
 		IF v_stock_type = 'TRACKED' THEN 
 			IF v_current_stock < v_quantity THEN
 				RAISE EXCEPTION 'Insufficient stock for item % (%). Available: %, Requested: %',
@@ -131,7 +88,7 @@ BEGIN
 		END IF;
 	END LOOP;
 
-	-- Verified price only
+	-- Verified price only  (payment_type added here)
 	INSERT INTO 
 		order_item (
 			purchased_price, 
@@ -140,7 +97,8 @@ BEGIN
 			discount_amount, 
 			subtotal, 
 			tenant_id, 
-			store_id
+			store_id,
+			payment_type
 		)
 	VALUES (
 		p_purchased_price,
@@ -149,10 +107,10 @@ BEGIN
 		p_discount_amount,
 		p_subtotal,
 		p_tenant_id,
-		p_store_id
-	) RETURNING id INTO v_order_item_id;
+		p_store_id,
+		p_payment_type::payment_type
+	) RETURNING order_item.id, order_item.created_at INTO v_order_item_id, v_order_item_created_at;
 
-	-- Bulk insert items
 	INSERT INTO purchased_item_list (
 		order_item_id,
 		item_id,
@@ -171,10 +129,9 @@ BEGIN
 		(item->>'base_price_snapshot')::INT,
 		(item->>'total_amount')::INT,
 		(item->>'item_name_snapshot')::TEXT,
-		0 -- (item->>'discount_amount')::INT TODO: Implement discount voucher
+		0 -- TODO: Implement discount voucher
 	FROM jsonb_array_elements(p_items) AS item;
 
-	-- Deduct stock for all items
 	UPDATE store_stock
 	SET 
 		stocks = store_stock.stocks - items.qty
@@ -190,6 +147,6 @@ BEGIN
 		AND "store_stock".store_id = p_store_id
 		AND warehouse.stock_type = 'TRACKED';
 
-	RETURN v_order_item_id;
+	RETURN QUERY SELECT v_order_item_id, v_order_item_created_at, p_total_amount, p_purchased_price;
 END;
-$$ LANGUAGE plpgsql;
+$function$;
