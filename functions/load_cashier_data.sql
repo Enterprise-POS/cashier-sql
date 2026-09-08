@@ -63,6 +63,6 @@ BEGIN
 		ON category_mtm_warehouse.item_id = warehouse.item_id
 	LEFT JOIN category
 		ON category.id = category_mtm_warehouse.category_id
-	WHERE warehouse.tenant_id = p_tenant_id;
+	WHERE warehouse.tenant_id = p_tenant_id ORDER BY warehouse.item_name;
 END;
 $$ LANGUAGE plpgsql;
