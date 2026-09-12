@@ -169,7 +169,7 @@ BEGIN
 	)
 	VALUES (
 		p_purchased_price, p_total_quantity, p_total_amount, p_discount_amount, p_subtotal,
-		p_tenant_id, p_store_id, p_payment_type::payment_type, v_payment_status, p_transaction_id,
+		p_tenant_id, p_store_id, p_payment_type::payment_type, v_payment_status, NULLIF(p_payment_url, ''),
 		p_payment_url, p_payment_token
 	)
 	RETURNING order_item.id, order_item.created_at INTO v_order_item_id, v_order_item_created_at;
